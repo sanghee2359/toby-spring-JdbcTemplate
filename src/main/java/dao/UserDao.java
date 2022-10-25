@@ -2,115 +2,49 @@ package dao;
 
 import domain.User;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 
 import javax.sql.DataSource;
 import java.sql.*;
+import java.util.List;
 
 public class UserDao {
-    private ConnectionMaker connectionMaker; // 클래스
-    private ConnectionImple connectionImple; // 인터페이스
-    private JdbcContext jdbcContext;
+    private JdbcTemplate jdbcTemplate;
     private DataSource dataSource;
-    public UserDao() {
-        this.connectionMaker = new ConnectionMaker();
-    }
-    public UserDao(DataSource dataSource){
+
+    public UserDao(DataSource dataSource) {
 //        this.connectionImple = aws;
         this.dataSource = dataSource;
-        this.jdbcContext = new JdbcContext(dataSource);
+        this.jdbcTemplate = new JdbcTemplate(dataSource);
     }
-    public void deleteAll() throws SQLException, ClassNotFoundException {
-        jdbcContext.exequteSql("DELETE FROM users");
-    }
-    public int getCount() throws SQLException, ClassNotFoundException {
-        Connection conn = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
-        int count = 0;
-        try {
-//            conn = connectionImple.makeConnection();
-            conn = dataSource.getConnection();
-            ps = conn.prepareStatement("SELECT count(*) FROM users");
-            rs = ps.executeQuery();
-            rs.next();
-            return rs.getInt(1);
-
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } finally {
-            if(rs != null){
-                try {
-                    rs.close();
-                } catch (SQLException e) {
-                }
-            }
-            if(ps != null){
-                try {
-                    ps.close();
-                } catch (SQLException e) {
-                }
-            }
-            if(conn != null){
-                try {
-                    conn.close();
-                } catch (SQLException e) {
-                }
-            }
-        }
-    }
-    public void add(User user) throws ClassNotFoundException, SQLException {
-//        Connection conn = connectionMaker.openConnection();
-        jdbcContext.workWithStatementStrategy(new StatementStrategy() {
-            @Override
-            public PreparedStatement makePreparedStatement(Connection c) throws SQLException {
-                PreparedStatement pstmt = c.prepareStatement("INSERT INTO users(id, name, password) VALUES(?, ?, ?);");
-                pstmt.setString(1, user.getId());
-                pstmt.setString(2, user.getName());
-                pstmt.setString(3, user.getPassword());
-                return pstmt;
-            }
-        });
-    }
-    public User findById(String id) throws SQLException, ClassNotFoundException {
-//        Connection conn = connectionMaker.openConnection();
-        Connection conn = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
-        User user = null;
-        try {
-//            conn = connectionImple.makeConnection();
-            conn = dataSource.getConnection();
-            ps = conn.prepareStatement("SELECT id, name, password FROM users WHERE id=?");
-            ps.setString(1, id);
-            rs = ps.executeQuery();
-            rs.next();
-            user = null;
-            if(rs.next()){
-                user = new User(rs.getString("id"),rs.getString("name"),rs.getString("password"));
-            }
+    RowMapper<User> rowMapper = new RowMapper<User>() {
+        @Override
+        public User mapRow(ResultSet rs, int rowNum) throws SQLException {
+            User user = new User(rs.getString("id"), rs.getString("name"), rs.getString("password"));
             return user;
-
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } finally {
-            if(rs != null){
-                try {
-                    rs.close();
-                } catch (SQLException e) {
-                }
-            }
-            if(ps != null){
-                try {
-                    ps.close();
-                } catch (SQLException e) {
-                }
-            }
-            if(conn != null){
-                try {
-                    conn.close();
-                } catch (SQLException e) {
-                }
-            }
         }
+    };
+
+    public void deleteAll() {
+        this.jdbcTemplate.update("DELETE FROM users");
+    }
+    public int getCount()  {
+        return this.jdbcTemplate.queryForObject("SELECT count(*) FROM users;", Integer.class);
+    }
+    public void add(User user) {
+//        Connection conn = connectionMaker.openConnection();
+        this.jdbcTemplate.update("INSERT INTO users(id, name, password) VALUES(?, ?, ?);",
+                user.getId(), user.getName(), user.getPassword());
+
+    }
+    public User findById(String id)  {
+        String sql = "SELECT id, name, password FROM users WHERE id=?;";
+        return this.jdbcTemplate.queryForObject(sql, rowMapper, id);
+    }
+
+    public List<User> getAll(){
+        String sql = "SELECT * from users order by id";
+        return this.jdbcTemplate.query(sql, rowMapper);
     }
 }

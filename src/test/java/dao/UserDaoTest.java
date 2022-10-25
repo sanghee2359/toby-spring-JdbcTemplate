@@ -12,6 +12,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.sql.SQLException;
+import java.util.List;
 
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -45,12 +46,13 @@ class UserDaoTest {
     void addAndSelect() throws SQLException, ClassNotFoundException {
 //        AWSConnectionImplement userDao = new AWSConnectionMaker());
 //        UserDao userDao = new UserDaoFactory().localUserDao();
-        UserDao userDao = context.getBean("awsUserDao", UserDao.class);
-        String id ="4";
-        userDao.add(new User(id, "sanghee", "25345"));
+
+        String id ="2";
+//        userDao.add(new User(id, "sanghee", "25345"));
+        userDao.add(user2);
 
         User user = userDao.findById(id);
-        Assertions.assertEquals("sanghee", user.getName());
+        Assertions.assertEquals("신지원", user.getName());
     }
     @Test
     @DisplayName("deleteAll과 Add가 잘 되는 지")
@@ -59,7 +61,19 @@ class UserDaoTest {
         userDao.deleteAll();
         userDao.add(user1);
         assertEquals(1, userDao.getCount());
+    }
 
+    @Test
+    @DisplayName("값이 없으면 빈 리스트를, 존재하면 있는 개수를 리턴하지는 지")
+    void getAllTest() throws SQLException, ClassNotFoundException {
+        userDao.deleteAll();
+        List<User> users = userDao.getAll();
+        assertEquals(0, users.size());
+        userDao.add(user1);
+        userDao.add(user2);
+        userDao.add(user3);
+        users = userDao.getAll();
+        assertEquals(3, users.size());
     }
 
 }
