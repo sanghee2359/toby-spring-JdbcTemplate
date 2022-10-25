@@ -14,13 +14,13 @@ public class UserDao {
     public UserDao(ConnectionImple aws){
         this.connectionImple = aws;
     }
-
-    public void deleteAll() throws SQLException, ClassNotFoundException {
+    public void jdbcContextWithStatementStrategy(StatementStrategy stmt) {
         Connection conn = null;
         PreparedStatement ps = null;
         try {
             conn = connectionImple.makeConnection();
-            ps = conn.prepareStatement("DELETE FROM users");
+//            ps = conn.prepareStatement("DELETE FROM users");
+            ps = stmt.makePreparedStatement(conn);
             ps.executeUpdate();
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
@@ -40,6 +40,10 @@ public class UserDao {
                 }
             }
         }
+    }
+
+    public void deleteAll() throws SQLException, ClassNotFoundException {
+        jdbcContextWithStatementStrategy(new DeleteAllStrategy());
     }
     public int getCount() throws SQLException, ClassNotFoundException {
         Connection conn = null;
@@ -79,34 +83,7 @@ public class UserDao {
     }
     public void add(User user) throws ClassNotFoundException, SQLException {
 //        Connection conn = connectionMaker.openConnection();
-        Connection conn = null;
-        PreparedStatement ps = null;
-        try {
-            conn = connectionImple.makeConnection();
-            ps = conn.prepareStatement("INSERT INTO users" +
-                    "(id, name, password) VALUES(?, ?, ?);");
-            ps.setString(1, user.getId());
-            ps.setString(2, user.getName());
-            ps.setString(3, user.getPassword());
-            ps.executeUpdate();
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } finally {
-            if(ps != null){
-                try {
-                    ps.close();
-                } catch (SQLException e) {
-                }
-            }
-            if(conn != null){
-                try {
-                    conn.close();
-                } catch (SQLException e) {
-                }
-            }
-        }
+        jdbcContextWithStatementStrategy(new AddStrategy(user));
     }
     public User findById(String id) throws SQLException, ClassNotFoundException {
 //        Connection conn = connectionMaker.openConnection();
