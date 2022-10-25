@@ -1,6 +1,7 @@
 package dao;
 
 import domain.User;
+import org.springframework.dao.EmptyResultDataAccessException;
 
 import java.sql.*;
 
@@ -14,32 +15,139 @@ public class UserDao {
         this.connectionImple = aws;
     }
 
+    public void deleteAll() throws SQLException, ClassNotFoundException {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        try {
+            conn = connectionImple.makeConnection();
+            ps = conn.prepareStatement("DELETE FROM users");
+            ps.executeUpdate();
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            if(ps != null){
+                try {
+                    ps.close();
+                } catch (SQLException e) {
+                }
+            }
+            if(conn != null){
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                }
+            }
+        }
+    }
+    public int getCount() throws SQLException, ClassNotFoundException {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        int count = 0;
+        try {
+            conn = connectionImple.makeConnection();
+            ps = conn.prepareStatement("SELECT count(*) FROM users");
+            rs = ps.executeQuery();
+            rs.next();
+            return rs.getInt(1);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            if(rs != null){
+                try {
+                    rs.close();
+                } catch (SQLException e) {
+                }
+            }
+            if(ps != null){
+                try {
+                    ps.close();
+                } catch (SQLException e) {
+                }
+            }
+            if(conn != null){
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                }
+            }
+        }
+    }
     public void add(User user) throws ClassNotFoundException, SQLException {
 //        Connection conn = connectionMaker.openConnection();
-        Connection conn = connectionImple.makeConnection();
-        PreparedStatement ps = conn.prepareStatement("INSERT INTO users" +
-                "(id, name, password) VALUES(?, ?, ?);");
-        ps.setString(1, user.getId());
-        ps.setString(2, user.getName());
-        ps.setString(3, user.getPassword());
-        ps.executeUpdate();
-
-        ps.close();
-        conn.close();
+        Connection conn = null;
+        PreparedStatement ps = null;
+        try {
+            conn = connectionImple.makeConnection();
+            ps = conn.prepareStatement("INSERT INTO users" +
+                    "(id, name, password) VALUES(?, ?, ?);");
+            ps.setString(1, user.getId());
+            ps.setString(2, user.getName());
+            ps.setString(3, user.getPassword());
+            ps.executeUpdate();
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            if(ps != null){
+                try {
+                    ps.close();
+                } catch (SQLException e) {
+                }
+            }
+            if(conn != null){
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                }
+            }
+        }
     }
     public User findById(String id) throws SQLException, ClassNotFoundException {
 //        Connection conn = connectionMaker.openConnection();
-        Connection conn = connectionImple.makeConnection();
-        PreparedStatement ps = conn.prepareStatement("SELECT id, name, password FROM users WHERE id=?");
-        ps.setString(1, id);
-        ResultSet rs = ps.executeQuery();
-        rs.next();
-
-        User user = new User(rs.getString("id"),rs.getString("name"),rs.getString("password"));
-
-        rs.close();
-        ps.close();
-        conn.close();
-        return user;
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        User user = null;
+        try {
+            conn = connectionImple.makeConnection();
+            ps = conn.prepareStatement("SELECT id, name, password FROM users WHERE id=?");
+            ps.setString(1, id);
+            rs = ps.executeQuery();
+            rs.next();
+            user = null;
+            if(rs.next()){
+                user = new User(rs.getString("id"),rs.getString("name"),rs.getString("password"));
+            }
+            return user;
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            if(rs != null){
+                try {
+                    rs.close();
+                } catch (SQLException e) {
+                }
+            }
+            if(ps != null){
+                try {
+                    ps.close();
+                } catch (SQLException e) {
+                }
+            }
+            if(conn != null){
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                }
+            }
+        }
     }
 }
