@@ -20,7 +20,7 @@ public class UserDao {
         this.jdbcContext = new JdbcContext(dataSource);
     }
     public void deleteAll() throws SQLException, ClassNotFoundException {
-        jdbcContext.workWithStatementStrategy(new DeleteAllStrategy());
+        jdbcContext.exequteSql("DELETE FROM users");
     }
     public int getCount() throws SQLException, ClassNotFoundException {
         Connection conn = null;
@@ -60,7 +60,16 @@ public class UserDao {
     }
     public void add(User user) throws ClassNotFoundException, SQLException {
 //        Connection conn = connectionMaker.openConnection();
-        jdbcContext.workWithStatementStrategy(new AddStrategy(user));
+        jdbcContext.workWithStatementStrategy(new StatementStrategy() {
+            @Override
+            public PreparedStatement makePreparedStatement(Connection c) throws SQLException {
+                PreparedStatement pstmt = c.prepareStatement("INSERT INTO users(id, name, password) VALUES(?, ?, ?);");
+                pstmt.setString(1, user.getId());
+                pstmt.setString(2, user.getName());
+                pstmt.setString(3, user.getPassword());
+                return pstmt;
+            }
+        });
     }
     public User findById(String id) throws SQLException, ClassNotFoundException {
 //        Connection conn = connectionMaker.openConnection();
