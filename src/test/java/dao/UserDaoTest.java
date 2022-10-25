@@ -20,10 +20,15 @@ class UserDaoTest {
     void AddAndGet() throws SQLException, ClassNotFoundException {
         User user1 = new User("1","sanghee","193915");
 
-//        클래스 커넥터 사용 UserDao userdao = new UserDao();
-//        AWSConnectionImple을 사용한 DB커넥트
+        // 클래스 커넥터 사용 UserDao userdao = new UserDao();
+
+/*      AWSConnectionImple을 사용한 DB커넥트
         AWSConnectionImple aws = new AWSConnectionImple();
         UserDao userDao = new UserDao(aws);
+*/
+        // 팩토리로 조립
+        UserDao userDao = new UserDaoFactory().awsUserDao();
+
 //        userdao.add(user1);
         userDao.findById("1");
         System.out.println(user1.getName());
